@@ -5,11 +5,12 @@
   <!-- Responsive Meta Tag -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>90 Second Timer</title>
-  <!-- Importing Lobster from Google Fonts for the timer message -->
+  <!-- Import Lobster from Google Fonts for the timer message -->
   <link href="https://fonts.googleapis.com/css2?family=Lobster&display=swap" rel="stylesheet" />
-  <!-- Favicon: A simple 16x16 PNG icon encoded in base64 -->
- <!-- Favicon using our custom SVG icon -->
- <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='16'%20height='16'%3E%3Crect%20width='16'%20height='16'%20fill='%23FFD381'/%3E%3Ctext%20x='8'%20y='12'%20font-size='10'%20text-anchor='middle'%20fill='%23000'%20font-family='sans-serif'%3E90%3C/text%3E%3C/svg%3E" />
+  <!-- Import Rajdhani for the button label -->
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600&display=swap" rel="stylesheet" />
+  <!-- Favicon (SVG favicon code as before) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='16'%20height='16'%3E%3Crect%20width='16'%20height='16'%20fill='%23FFD381'/%3E%3Ctext%20x='8'%20y='12'%20font-size='10'%20text-anchor='middle'%20fill='%23000'%20font-family='sans-serif'%3E90%3C/text%3E%3C/svg%3E" />
   <style>
     /* Base styling */
     body {
@@ -20,22 +21,33 @@
       background: #000;
       color: white;
     }
+
     .container {
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
+      box-sizing: border-box;
     }
-    /* Circle container and progress ring */
+
+    /* Make the circle container fill more of the screen */
     .circle-container {
       position: relative;
-      width: 200px;
-      height: 200px;
+      width: 80vw;          /* 80% of viewport width */
+      height: 80vw;         /* Keep it square */
+      max-width: 400px;     /* Optional: limit maximum size on larger screens */
+      max-height: 400px;
+      margin: 0 auto;
     }
+
+    /* Scale the SVG to 100% of container, preserving coordinate system */
     .progress-ring {
+      width: 100%;
+      height: 100%;
       transform: rotate(-90deg);
     }
+    /* The progress ring circle keeps the same design using viewBox units */
     .progress-ring__circle {
       transition: stroke-dashoffset 0.35s;
       transform-origin: center;
@@ -43,36 +55,36 @@
     .progress-ring__bg {
       transition: none;
     }
-    /* Timer button styling */
+
+    /* Timer button: sized at 75% of the container */
     .timer-button {
       position: absolute;
       top: 50%;
       left: 50%;
+      width: 75%;
+      height: 75%;
       transform: translate(-50%, -50%);
-      width: 150px;
-      height: 150px;
       border: 2px solid white;
       border-radius: 50%;
       background-color: #000;
       cursor: pointer;
-      overflow: hidden; /* Clip any overflow from the image */
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-    /* Button label for initial state */
+
+    /* Button label styled with Rajdhani – visible only in the initial state */
     #button-label {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
-      font-size: 1.8em;
       z-index: 10;
-      font-family: 'Rajdhani', sans-serif; /* button label remains as Rajdhani */
+      font-family: 'Rajdhani', sans-serif;
       font-weight: 600;
       letter-spacing: 0.05em;
+      color: white;
+      font-size: 2rem;
     }
+
     /* Image inside the button */
     #timer-img {
       position: absolute;
@@ -83,30 +95,31 @@
       object-fit: contain;
       background-color: #000;
       border-radius: 50%;
-      display: none; /* Hidden until the timer starts */
+      display: none;
       z-index: 5;
     }
-    /* Timer message styling (below the circle) using Lobster */
+
+    /* Timer message underneath: using Lobster for a stylish look */
     #timer-message {
       margin-top: 20px;
-      font-size: 2em;
       font-family: 'Lobster', cursive;
+      font-size: 2.5rem;
       display: inline-block;
       position: relative;
     }
-    /* The base layer of the dynamic text */
+    /* Base layer for dynamic text */
     .static-text {
       color: white;
     }
-    /* The overlay layer that fills from left to right */
+    /* Overlay layer that fills from left to right */
     .progress-overlay {
       position: absolute;
       top: 0;
       left: 0;
-      color: #FFD381; /* Fill color – adjust as desired */
+      color: #FFD381;
       white-space: nowrap;
       overflow: hidden;
-      width: 0;  /* Will be set dynamically */
+      width: 0;
       pointer-events: none;
     }
   </style>
@@ -114,8 +127,8 @@
 <body>
   <div class="container">
     <div class="circle-container">
-      <!-- SVG for the progress ring -->
-      <svg class="progress-ring" width="200" height="200">
+      <!-- SVG for the progress ring with a viewBox so it scales -->
+      <svg class="progress-ring" viewBox="0 0 200 200">
         <defs>
           <linearGradient id="gradient" x1="50%" y1="0%" x2="50%" y2="100%">
             <stop offset="0%" stop-color="#C874F8"/>
@@ -123,22 +136,12 @@
             <stop offset="100%" stop-color="#FFD381"/>
           </linearGradient>
         </defs>
-        <circle class="progress-ring__bg"
-          stroke="white"
-          stroke-width="4"
-          fill="none"
-          r="90"
-          cx="100"
-          cy="100" />
-        <circle class="progress-ring__circle"
-          stroke="url(#gradient)"
-          stroke-width="4"
-          fill="none"
-          r="90"
-          cx="100"
-          cy="100" />
+        <!-- Background circle (white outline) -->
+        <circle class="progress-ring__bg" stroke="white" stroke-width="4" fill="none" r="90" cx="100" cy="100" />
+        <!-- Foreground progress circle using the gradient stroke -->
+        <circle class="progress-ring__circle" stroke="url(#gradient)" stroke-width="4" fill="none" r="90" cx="100" cy="100" />
       </svg>
-      <!-- Timer button holds both an initial text label and the image element -->
+      <!-- Timer button holds an initial label and the image element -->
       <button id="timer-button" class="timer-button">
         <span id="button-label">Start</span>
         <img id="timer-img" src="" alt="" />
@@ -149,24 +152,24 @@
   </div>
 
   <script>
-    // Grab DOM elements
+    // Grab DOM elements.
     const timerButton = document.getElementById("timer-button");
     const buttonLabel = document.getElementById("button-label");
     const timerImg = document.getElementById("timer-img");
     const timerMessage = document.getElementById("timer-message");
     const circle = document.querySelector('.progress-ring__circle');
 
-    // Calculate the circle's circumference for the progress ring.
-    const radius = circle.r.baseVal.value;
-    const circumference = 2 * Math.PI * radius;
+    // Using viewBox values: our design coordinates are 200x200.
+    const designRadius = 90; // as defined in the SVG circle (r="90")
+    const circumference = 2 * Math.PI * designRadius;
     circle.style.strokeDasharray = `${circumference} ${circumference}`;
     circle.style.strokeDashoffset = circumference;
 
-    // Total timer duration (90 seconds)
+    // Timer duration: 90 seconds (in milliseconds)
     const totalDuration = 90 * 1000;
-    let timer;       // For the setInterval
-    let startTime;   // To record when the timer starts
-    let timerState = "initial";  // "initial", "running", or "finished"
+    let timer;       
+    let startTime;   
+    let timerState = "initial"; // "initial", "running", or "finished"
 
     // Update the progress ring based on elapsed time.
     function setProgress(timeElapsed) {
@@ -175,9 +178,9 @@
       circle.style.strokeDashoffset = offset;
     }
 
-    // Update the timer message text and inner image according to elapsed time.
+    // Update the timer message text and inner image for each phase.
     function updateState(timeElapsed) {
-      // Ensure the button image is visible.
+      // Ensure button image is shown.
       timerImg.style.display = 'block';
       let phaseText, phaseProgress;
       if (timeElapsed < 30 * 1000) {
@@ -193,8 +196,7 @@
         phaseProgress = (timeElapsed - 60 * 1000) / (30 * 1000);
         timerImg.src = "resets.png";
       }
-
-      // Update the timer message using two overlapping spans.
+      // Use overlapping spans for dynamic color fill effect.
       timerMessage.innerHTML = `<span class="static-text">${phaseText}</span><span class="progress-overlay">${phaseText}</span>`;
       const staticTextEl = timerMessage.querySelector('.static-text');
       const overlayEl = timerMessage.querySelector('.progress-overlay');
@@ -202,7 +204,7 @@
       overlayEl.style.width = (phaseProgress * fullWidth) + 'px';
     }
 
-    // Reset the timer to its initial state.
+    // Reset the timer to initial state.
     function resetTimer() {
       clearInterval(timer);
       timerState = "initial";
