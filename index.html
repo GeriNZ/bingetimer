@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Ensure mobile responsiveness -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>90 Second Timer</title>
+  <style>
+    /* Dark theme with white text */
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+      background: #000;
+      color: white;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    /* Container for the circular button and progress ring */
+    .circle-container {
+      position: relative;
+      width: 200px;
+      height: 200px;
+    }
+    /* Rotate the SVG so progress starts at the top */
+    .progress-ring {
+      transform: rotate(-90deg);
+    }
+    /* Smooth transition on stroke changes */
+    .progress-ring__circle {
+      transition: stroke-dashoffset 0.35s;
+      transform-origin: center;
+    }
+    /* Static white circle outline for progress background */
+    .progress-ring__bg {
+      transition: none;
+    }
+    /* Style for the circular button */
+    .timer-button {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 150px;
+      height: 150px;
+      border: 2px solid white;
+      border-radius: 50%;
+      background-color: #000;
+      cursor: pointer;
+      /* Remove default button text styling */
+      font-size: 0;
+      padding: 0;
+    }
+    /* Style for the inner image:
+       - 80% of the button’s size for a 20% reduction,
+       - centered with display block and auto margins */
+    #timer-img {
+      width: 80%;
+      height: 80%;
+      display: none; /* initially hidden */
+      margin: auto;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    /* Message below the circle */
+    #timer-message {
+      margin-top: 20px;
+      font-size: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="circle-container">
+      <!-- SVG for the progress ring -->
+      <svg class="progress-ring" width="200" height="200">
+        <defs>
+          <!-- Define a vertical gradient for the progress stroke -->
+          <linearGradient id="gradient" x1="50%" y1="0%" x2="50%" y2="100%">
+            <stop offset="0%" stop-color="#C874F8"/>
+            <stop offset="50%" stop-color="#66EFCF"/>
+            <stop offset="100%" stop-color="#FFD381"/>
+          </linearGradient>
+        </defs>
+        <!-- Background circle (white outline) -->
+        <circle class="progress-ring__bg"
+                stroke="white"
+                stroke-width="4"
+                fill="none"
+                r="90"
+                cx="100"
+                cy="100" />
+        <!-- Foreground circle with gradient stroke (progress ring) -->
+        <circle class="progress-ring__circle"
+                stroke="url(#gradient)"
+                stroke-width="4"
+                fill="none"
+                r="90"
+                cx="100"
+                cy="100" />
+      </svg>
+      <!-- Circular button now holds an image element -->
+      <button id="timer-button" class="timer-button">
+        <img id="timer-img" src="" alt="" />
+      </button>
+    </div>
+    <!-- On-screen message below the button -->
+    <p id="timer-message">Catch the urge</p>
+  </div>
+
+  <script>
+    // Grab DOM elements
+    const timerButton = document.getElementById("timer-button");
+    const timerImg = document.getElementById("timer-img");
+    const timerMessage = document.getElementById("timer-message");
+    const circle = document.querySelector('.progress-ring__circle');
+
+    // Calculate the circle’s circumference (for the progress ring)
+    const radius = circle.r.baseVal.value;
+    const circumference = 2 * Math.PI * radius;
+    circle.style.strokeDasharray = `${circumference} ${circumference}`;
+    circle.style.strokeDashoffset = circumference;
+
+    // Define total timer duration (90 seconds)
+    const totalDuration = 90 * 1000; 
+    let timer;       // Interval timer
+    let startTime;   // Timestamp when timer starts
+
+    // Define a state variable: "initial", "running", or "finished"
+    let timerState = "initial";
+
+    // Update the progress ring based on elapsed time
+    function setProgress(timeElapsed) {
+      const percent = timeElapsed / totalDuration;
+      const offset = circumference - (percent * circumference);
+      circle.style.strokeDashoffset = offset;
+    }
+
+    // Update both the message below and the inner image based on elapsed time
+    function updateState(timeElapsed) {
+      // Always ensure the image is visible during running phases.
+      timerImg.style.display = 'block';
+      
+      if (timeElapsed < 30 * 1000) {
+        timerMessage.textContent = "Tune in for 30 seconds";
+        timerImg.src = "tunein.png";
+      } else if (timeElapsed < 60 * 1000) {
+        timerMessage.textContent = "Reflect for 30 seconds";
+        timerImg.src = "reflect.png";
+      } else {
+        timerMessage.textContent = "Reset";
+        timerImg.src = "resets.png";
+      }
+    }
+
+    // Reset the timer to its initial state and hide the image again
+    function resetTimer() {
+      clearInterval(timer);
+      timerState = "initial";
+      timerMessage.textContent = "Catch the urge";
+      timerImg.style.display = 'none';
+      timerImg.src = "";
+      circle.style.strokeDashoffset = circumference;
+      timerButton.disabled = false;
+    }
+
+    // Start the timer and update progress and state accordingly
+    function startTimer() {
+      timerState = "running";
+      timerButton.disabled = true;
+      startTime = Date.now();
+      
+      // Immediately update state so the first image appears after press.
+      updateState(0);
+      
+      timer = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        if (elapsed >= totalDuration) {
+          // Ensure we finish the progress ring and update state
+          setProgress(totalDuration);
+          updateState(totalDuration);
+          clearInterval(timer);
+          timerState = "finished";
+          timerButton.disabled = false;
+        } else {
+          setProgress(elapsed);
+          updateState(elapsed);
+        }
+      }, 100); // update every 100ms for smooth animation
+    }
+
+    // Button click: start if initial; reset if finished.
+    timerButton.addEventListener("click", () => {
+      if (timerState === "initial") {
+        startTimer();
+      } else if (timerState === "finished") {
+        resetTimer();
+      }
+    });
+  </script>
+</body>
+</html>
