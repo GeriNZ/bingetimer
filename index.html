@@ -5,14 +5,15 @@
   <!-- Responsive Meta Tag -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>90 Second Timer</title>
-  <!-- Import Lobster from Google Fonts for the timer message -->
+  <!-- Import Lobster & Rajdhani for fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Lobster&display=swap" rel="stylesheet" />
-  <!-- Import Rajdhani for the button label -->
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600&display=swap" rel="stylesheet" />
-  <!-- Favicon (SVG favicon code as before) -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='16'%20height='16'%3E%3Crect%20width='16'%20height='16'%20fill='%23FFD381'/%3E%3Ctext%20x='8'%20y='12'%20font-size='10'%20text-anchor='middle'%20fill='%23000'%20font-family='sans-serif'%3E90%3C/text%3E%3C/svg%3E" />
+  <!-- NoSleep.js for fallback wake-lock support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/nosleep/0.12.0/NoSleep.min.js"></script>
+  <!-- Favicon (SVG) -->
+  <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='16'%20height='16'%3E%3Crect%20width='16'%20height='16'%20fill='%23FFD381'/%3E%3Ctext%20x='8'%20y='12'%20font-size='10'%20text-anchor='middle'%20fill='%23000'%20font-family='sans-serif'%3E90%3C/text%3E%3C/svg%3E" />
   <style>
-    /* Base styling */
     body {
       font-family: sans-serif;
       text-align: center;
@@ -21,113 +22,64 @@
       background: #000;
       color: white;
     }
-
     .container {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
       min-height: 100vh;
-      box-sizing: border-box;
     }
-
-    /* Make the circle container fill more of the screen */
     .circle-container {
       position: relative;
-      width: 80vw;          /* 80% of viewport width */
-      height: 80vw;         /* Keep it square */
-      max-width: 400px;     /* Optional: limit maximum size on larger screens */
-      max-height: 400px;
-      margin: 0 auto;
+      width: 80vw; height: 80vw;
+      max-width: 400px; max-height: 400px;
     }
-
-    /* Scale the SVG to 100% of container, preserving coordinate system */
     .progress-ring {
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       transform: rotate(-90deg);
     }
-    /* The progress ring circle keeps the same design using viewBox units */
     .progress-ring__circle {
       transition: stroke-dashoffset 0.35s;
       transform-origin: center;
     }
-    .progress-ring__bg {
-      transition: none;
-    }
-
-    /* Timer button: sized at 75% of the container */
+    .progress-ring__bg { transition: none; }
     .timer-button {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 75%;
-      height: 75%;
+      position: absolute; top: 50%; left: 50%;
+      width: 75%; height: 75%;
       transform: translate(-50%, -50%);
-      border: 2px solid white;
-      border-radius: 50%;
-      background-color: #000;
-      cursor: pointer;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      border: 2px solid white; border-radius: 50%;
+      background-color: #000; cursor: pointer;
+      overflow: hidden; display: flex;
+      align-items: center; justify-content: center;
     }
-
-    /* Button label styled with Rajdhani – visible only in the initial state */
     #button-label {
-      position: absolute;
-      z-index: 10;
+      position: absolute; z-index: 10;
       font-family: 'Rajdhani', sans-serif;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      color: white;
-      font-size: 2rem;
+      font-weight: 600; letter-spacing: 0.05em;
+      color: white; font-size: 2rem;
     }
-
-    /* Image inside the button */
     #timer-img {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      background-color: #000;
-      border-radius: 50%;
-      display: none;
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: contain; background-color: #000;
+      border-radius: 50%; display: none;
       z-index: 5;
     }
-
-    /* Timer message underneath: using Lobster for a stylish look */
     #timer-message {
       margin-top: 20px;
       font-family: 'Lobster', cursive;
       font-size: 2.5rem;
-      display: inline-block;
-      position: relative;
+      display: inline-block; position: relative;
     }
-    /* Base layer for dynamic text */
-    .static-text {
-      color: white;
-    }
-    /* Overlay layer that fills from left to right */
+    .static-text { color: white; }
     .progress-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      color: #FFD381;
-      white-space: nowrap;
-      overflow: hidden;
-      width: 0;
-      pointer-events: none;
+      position: absolute; top: 0; left: 0;
+      color: #FFD381; white-space: nowrap;
+      overflow: hidden; width: 0; pointer-events: none;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="circle-container">
-      <!-- SVG for the progress ring with a viewBox so it scales -->
       <svg class="progress-ring" viewBox="0 0 200 200">
         <defs>
           <linearGradient id="gradient" x1="50%" y1="0%" x2="50%" y2="100%">
@@ -136,101 +88,118 @@
             <stop offset="100%" stop-color="#FFD381"/>
           </linearGradient>
         </defs>
-        <!-- Background circle (white outline) -->
-        <circle class="progress-ring__bg" stroke="white" stroke-width="4" fill="none" r="90" cx="100" cy="100" />
-        <!-- Foreground progress circle using the gradient stroke -->
-        <circle class="progress-ring__circle" stroke="url(#gradient)" stroke-width="4" fill="none" r="90" cx="100" cy="100" />
+        <circle class="progress-ring__bg" stroke="white" stroke-width="4"
+                fill="none" r="90" cx="100" cy="100" />
+        <circle class="progress-ring__circle" stroke="url(#gradient)"
+                stroke-width="4" fill="none" r="90" cx="100" cy="100" />
       </svg>
-      <!-- Timer button holds an initial label and the image element -->
       <button id="timer-button" class="timer-button">
         <span id="button-label">Start</span>
         <img id="timer-img" src="" alt="" />
       </button>
     </div>
-    <!-- Timer message below the circle -->
     <p id="timer-message">Catch the urge</p>
   </div>
 
   <script>
-    // Grab DOM elements.
-    const timerButton = document.getElementById("timer-button");
-    const buttonLabel = document.getElementById("button-label");
-    const timerImg = document.getElementById("timer-img");
-    const timerMessage = document.getElementById("timer-message");
+    // Elements & ring setup
+    const btn = document.getElementById("timer-button");
+    const lbl = document.getElementById("button-label");
+    const img = document.getElementById("timer-img");
+    const msg = document.getElementById("timer-message");
     const circle = document.querySelector('.progress-ring__circle');
+    const r = 90, circ = 2 * Math.PI * r;
+    circle.style.strokeDasharray = `${circ} ${circ}`;
+    circle.style.strokeDashoffset = circ;
 
-    // Using viewBox values: our design coordinates are 200x200.
-    const designRadius = 90; // as defined in the SVG circle (r="90")
-    const circumference = 2 * Math.PI * designRadius;
-    circle.style.strokeDasharray = `${circumference} ${circumference}`;
-    circle.style.strokeDashoffset = circumference;
+    // Timer vars
+    const total = 90*1000;
+    let timerState = "initial", timerID, startTime;
 
-    // Timer duration: 90 seconds (in milliseconds)
-    const totalDuration = 90 * 1000;
-    let timer;       
-    let startTime;   
-    let timerState = "initial"; // "initial", "running", or "finished"
-
-    // Update the progress ring based on elapsed time.
-    function setProgress(timeElapsed) {
-      const fraction = timeElapsed / totalDuration;
-      const offset = circumference - fraction * circumference;
-      circle.style.strokeDashoffset = offset;
-    }
-
-    // Update the timer message text and inner image for each phase.
-    function updateState(timeElapsed) {
-      // Ensure button image is shown.
-      timerImg.style.display = 'block';
-      let phaseText, phaseProgress;
-      if (timeElapsed < 30 * 1000) {
-        phaseText = "Tune in";
-        phaseProgress = timeElapsed / (30 * 1000);
-        timerImg.src = "tunein.png";
-      } else if (timeElapsed < 60 * 1000) {
-        phaseText = "Reflect";
-        phaseProgress = (timeElapsed - 30 * 1000) / (30 * 1000);
-        timerImg.src = "reflect.png";
-      } else {
-        phaseText = "Reset";
-        phaseProgress = (timeElapsed - 60 * 1000) / (30 * 1000);
-        timerImg.src = "resets.png";
+    // Wake Lock API
+    let wakeLock = null;
+    async function requestWakeLock(){
+      if ('wakeLock' in navigator){
+        try {
+          wakeLock = await navigator.wakeLock.request('screen');
+          wakeLock.addEventListener('release', ()=>console.log('WakeLock released'));
+        } catch(err){
+          console.error('WakeLock error:', err);
+        }
       }
-      // Use overlapping spans for dynamic color fill effect.
-      timerMessage.innerHTML = `<span class="static-text">${phaseText}</span><span class="progress-overlay">${phaseText}</span>`;
-      const staticTextEl = timerMessage.querySelector('.static-text');
-      const overlayEl = timerMessage.querySelector('.progress-overlay');
-      const fullWidth = staticTextEl.offsetWidth;
-      overlayEl.style.width = (phaseProgress * fullWidth) + 'px';
+    }
+    function releaseWakeLock(){
+      if (wakeLock) wakeLock.release();
+      wakeLock = null;
     }
 
-    // Reset the timer to initial state.
-    function resetTimer() {
-      clearInterval(timer);
+    // NoSleep.js fallback
+    const noSleep = new NoSleep();
+    function enableNoSleep(){ noSleep.enable(); }
+    function disableNoSleep(){ noSleep.disable(); }
+
+    // Progress ring update
+    function setProgress(elapsed){
+      const frac = elapsed/total;
+      circle.style.strokeDashoffset = circ - frac*circ;
+    }
+
+    // Dynamic message + image
+    function updateState(elapsed){
+      img.style.display = 'block';
+      let text, prog;
+      if(elapsed<30*1000){
+        text = "Tune in";
+        prog = elapsed/(30*1000);
+        img.src="tunein.png";
+      } else if(elapsed<60*1000){
+        text = "Reflect";
+        prog = (elapsed-30*1000)/(30*1000);
+        img.src="reflect.png";
+      } else {
+        text = "Reset";
+        prog = (elapsed-60*1000)/(30*1000);
+        img.src="resets.png";
+      }
+      msg.innerHTML = `<span class="static-text">${text}</span><span class="progress-overlay">${text}</span>`;
+      const base = msg.querySelector('.static-text'),
+            over = msg.querySelector('.progress-overlay'),
+            w = base.offsetWidth;
+      over.style.width = (prog*w)+'px';
+    }
+
+    // Reset
+    function resetTimer(){
+      clearInterval(timerID);
       timerState = "initial";
-      timerMessage.textContent = "Catch the urge";
-      timerImg.style.display = 'none';
-      timerImg.src = "";
-      buttonLabel.style.display = 'block';
-      circle.style.strokeDashoffset = circumference;
-      timerButton.disabled = false;
+      msg.textContent = "Catch the urge";
+      img.style.display = 'none';
+      img.src = "";
+      lbl.style.display = 'block';
+      circle.style.strokeDashoffset = circ;
+      btn.disabled = false;
+      releaseWakeLock();
+      disableNoSleep();
     }
 
-    // Start the timer.
-    function startTimer() {
+    // Start
+    function startTimer(){
       timerState = "running";
-      timerButton.disabled = true;
-      buttonLabel.style.display = 'none';
+      btn.disabled = true;
+      lbl.style.display = 'none';
+      // wake-lock & fallback
+      requestWakeLock();
+      enableNoSleep();
       startTime = Date.now();
       updateState(0);
-      timer = setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        if (elapsed >= totalDuration) {
-          setProgress(totalDuration);
-          updateState(totalDuration);
-          clearInterval(timer);
-          timerState = "finished";
-          timerButton.disabled = false;
+      timerID = setInterval(()=>{
+        const elapsed = Date.now()-startTime;
+        if(elapsed>=total){
+          setProgress(total);
+          updateState(total);
+          clearInterval(timerID);
+          timerState="finished";
+          btn.disabled=false;
         } else {
           setProgress(elapsed);
           updateState(elapsed);
@@ -238,13 +207,10 @@
       }, 100);
     }
 
-    // Button click: start if initial; reset if finished.
-    timerButton.addEventListener("click", () => {
-      if (timerState === "initial") {
-        startTimer();
-      } else if (timerState === "finished") {
-        resetTimer();
-      }
+    // Click handler
+    btn.addEventListener('click', ()=>{
+      if(timerState==="initial") startTimer();
+      else if(timerState==="finished") resetTimer();
     });
   </script>
 </body>
